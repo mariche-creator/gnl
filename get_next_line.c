@@ -6,16 +6,11 @@
 /*   By: mchernyu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/24 12:49:09 by mchernyu          #+#    #+#             */
-/*   Updated: 2021/11/01 21:05:30 by mchernyu         ###   ########.fr       */
+/*   Updated: 2021/11/01 21:38:08 by mchernyu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include "get_next_line.h"
-#define BUFFER_SIZE 42
 
 char	*ft_strnew(size_t size);
 char	*ft_strchr(const char *s, int c);
@@ -41,6 +36,8 @@ char	*get_next_line(int fd)
 		buff[read_bytes] = '\0';
 		if ((p_n = ft_strchr(buff, '\n')))
 		{
+			if ((p_n = ft_strchr(buff, '\0')))
+				remainder = ft_strdup(++p_n);
 			*p_n = '\0';
 			remainder = ft_strdup(++p_n);
 		}
@@ -182,29 +179,4 @@ void	ft_strclr(char *s)
 			s++;
 		}
 	}
-}
-
-int main(void)
-{
-	int fd;
-	char *line;
-
-	fd = open("test.txt", O_RDONLY);
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
 }
