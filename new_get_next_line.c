@@ -6,7 +6,7 @@
 /*   By: mchernyu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/02 13:55:12 by mchernyu          #+#    #+#             */
-/*   Updated: 2021/11/02 19:36:51 by mchernyu         ###   ########.fr       */
+/*   Updated: 2021/11/14 17:52:21 by mchernyu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,146 +15,115 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define BUFFER_SIZE 7
-
 #include "get_next_line.h"
 
-char *ft_search(char *buff, char c, int size, int *length)
+char    *first_line(int fd, int *flag, char *buff, char *remainder);
+char    *other_lines(int fd, char *buff, char *result, char *remainder);
+
+char    *get_next_line(int fd)
 {
-	int i;
-
-	i = 0;
-
-	while (size > 0)
-	{
-		 if (buff[i] == c)
-		 {
-			 *length = i;
-			 return (&buff[i]);
-		 }
-		 i++;
-		 size--;
-	}
-	*length = i;
-	return (NULL);
-}
-
-size_t	ft_strlen(const char *s)
-{
-	size_t	i;
-
-	i = 0;
-	while (s[i] != '\0')
-		i++;
-	return (i);
-}
-
-char	*ft_strdup(const char *s1)
-{
-	char	*dst;
-	int i;
-
-	i = 0;
-	dst = malloc(ft_strlen(s1) + 1);
-	if (dst == NULL)
+    char    *result;
+    char    buff;
+    static char *remainder;
+    
+    //if (flag != 1)
+	//	flag = 0;
+    result = NULL;
+	buff = (char *)malloc(BUFFER_SIZE + 1);
+	if (buff == NULL)
 		return (NULL);
-	while (s1[i] != '\0')
-	{
-		dst[i] = s1[i];
-		i++;
-	}
-	dst[i] = '\0';
-	return (dst);
+	printf("Flag at main is %d", flag);
+    if(flag == 0)
+		result = first_line(fd, &flag, buff, remainder);
+    else
+        result = other_lines(fd, buff, result, remainder);
+    return (result);
 }
 
-char	*ft_strjoin(char const *s1, char const *s2)
+char    *first_line(int fd, int *flag, char *buff, char *remainder)
 {
-	char	*result;
-	int		i;
-	int		j;
+	ssize_t bytes;
+    char *result;
+    int i;
+    int j;
 
+   	printf("Flag at first line is %d\n", *flag);
+	i = 0;
+    j = 0;
+    *flag = 1;
+	printf("Flag after assigning is %d\n", *flag);
+    bytes = read(fd, buff, BUFFER_SIZE);
+    if(bytes >= 0)
+    {
+        result = (char *)malloc(bytes + 1);
+        while((buff[i] != '\n' || buff[i] != '\0') && bytes > 0)
+        { 
+			result[i] = buff[i];
+            i++;
+            bytes--;
+        }
+        if(buff[i] == '\n')
+        {
+            result[i] = '\n';
+            i++;
+            while (bytes > 0)
+            {
+                remainder[j] = buff[i];
+                j++;
+                i++;
+                bytes--;
+            }
+            remainder[j] = '\0';
+        }
+        result[i] = '\0';
+		free(buff);
+		return (result);
+    }
+    return (NULL);
+}
+
+char    *other_lines(int fd, char *buff, char *result, char *remainder)
+{
+    ssize_t bytes;
+    char tmp;
+    int i;
+    int j;
+   
+    printf("Entered into other_lines");
 	i = 0;
 	j = 0;
-	if (!s1 || !s2)
+	tmp = (char *)malloc(BUFFER_SIZE);
+	if (tmp == NULL)
 		return (NULL);
-	result = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
-	if (!result)
+	bytes = read(fd, buff, BUFFER_SIZE);
+    if(bytes >= 0)
+    {
+        while((buff[i] != '\n' || buff [i] != '\0') && bytes > 0)
+        {
+            tmp[i] = buff[i];
+            i++;
+            bytes--;
+        }
+        if(buff[i] == '\n')
+        {
+            tmp[i] = '\n';
+            i = 0;
+            while(bytes > 0)
+            {
+                remainder[j] = tmp[i];
+                j++;
+                i++;
+                bytes--;
+            }
+            remainder[j] = '\0';      
+        }
+        tmp[i] = '\0';
+    }
+    buff = result;
+    result = (char *)malloc((ft_strlen(result)) + 2);
+	if (result == NULL)
 		return (NULL);
-	while (s1[i])
-	{
-		result[i] = s1[i];
-		i++;
-	}
-	while (s2[j])
-	{
-		result[i] = s2[j];
-		i++;
-		j++;
-	}
-	result[i] = '\0';
-	return (result);
-}
-char * ft_copy_in(char *result, char *buff, int length)
-{
-	int i;
-
-	i = 0;
-	result = malloc(length + 1);
-	if (!result)
-		return (NULL);
-	while (i <= length)
-	{
-		result[i] = buff[i];
-		i++;
-	}
-	result[i] = '\0';
-	return (result);
-}
-
-char *get_next_line(int fd)
-{
-	char *result;
-	char buff[BUFFER_SIZE + 1];
-	static char *remainder;
-	int length;
-	int read_bytes;
-
-	//check remainder//
-	while (read(fd, buff, BUFFER_SIZE) >= 0)
-	{
-		read_bytes = read(fd, buff, BUFFER_SIZE);
-		if ((ft_search(buff, '\n', read_bytes, &length)) != NULL)
-		{		
-			result = ft_copy_in(result, buff, length);
-			remainder = ft_copy_in(remainder, &buff[length], read_bytes - length);
-		}
-		else
-			result = ft_strjoin(result, buff);
-	}
-	return (NULL);
-}
-
-int main(void)
-{
-	int fd;
-	char *line;
-
-	fd = open("test.txt", O_RDONLY);
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
-
-	line = get_next_line(fd);
-	printf("%s", line);
+    result = ft_strjoin(result, tmp);
+    free(buff);
+    return (result);
 }
