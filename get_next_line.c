@@ -3,180 +3,106 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mchernyu <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: mariche <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/10/24 12:49:09 by mchernyu          #+#    #+#             */
-/*   Updated: 2021/11/01 21:38:08 by mchernyu         ###   ########.fr       */
+/*   Created: 2021/11/03 20:56:27 by mariche           #+#    #+#             */
+/*   Updated: 2021/11/14 13:08:53 by mariche          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char	*ft_strnew(size_t size);
-char	*ft_strchr(const char *s, int c);
-char	*ft_strdup(const char *s1);
-char 	*ft_strcpy(char *dst, const char *src);
-char	*ft_strjoin(char const *s1, char const *s2);
-size_t	ft_strlen(const char *s);
-char 	*check_remainder(char *remainder, char **result);
-void	ft_strclr(char *s);
+char    *first_line(int fd, int *flag, char *buff, char *remainder);
+char    *other_lines(int fd, char *buff, char *result, char *remainder);
 
-char	*get_next_line(int fd)
+char    *get_next_line(int fd)
 {
-	char buff[BUFFER_SIZE + 1];
-	char *result;
-	static char *remainder;
-	char *tmp;
-	int read_bytes;
-	char *p_n;
-	
-	p_n = check_remainder(remainder, &result);
-	while (!p_n && (read_bytes = read(fd, buff, BUFFER_SIZE)))
-	{
-		buff[read_bytes] = '\0';
-		if ((p_n = ft_strchr(buff, '\n')))
-		{
-			if ((p_n = ft_strchr(buff, '\0')))
-				remainder = ft_strdup(++p_n);
-			*p_n = '\0';
-			remainder = ft_strdup(++p_n);
-		}
-		tmp = result;
-		result = ft_strjoin(result, buff);
-		free(tmp);
-	}
-	return (result);
+    char    *result;
+    char    buff[BUFFER_SIZE];
+    static char *remainder;
+    static int  flag;
+    
+    flag = 0;
+    result = NULL;
+    if(flag == 0)
+        result = first_line(fd, &flag, buff, remainder);
+    else
+        result = other_lines(fd, buff, result, remainder);
+    return (result);
 }
 
-char *ft_strnew(size_t size)
+char    *first_line(int fd, int *flag, char *buff, char *remainder)
 {
-	char *str;
+    ssize_t bytes;
+    char *result;
+    int i;
+    int j;
 
-	str = (char *)malloc(sizeof(char) * size + 1);
-	if (str == NULL)
-		return (NULL);
-	str[size] = '\0';
-	while (size)
-	{	
-		str[size] = '\0';
-		size--;
-	}
-	return (str);
+    i = 0;
+    j = 0;
+    *flag = 1;
+    bytes = read(fd, buff, BUFFER_SIZE);
+    if(bytes >= 0) //>= 0 || > 0
+    {
+        result = (char *)malloc(bytes + 1);
+        while((buff[i] != '\n' || buff[i] != '\0') && bytes > 0)
+        {
+            result[i] = buff[i];
+            i++;
+            bytes--;
+        }
+        if(buff[i] == '\n')
+        {
+            result[i] = '\n';
+            i++;
+            while (bytes > 0)
+            {
+                remainder[j] = buff[i];
+                j++;
+                i++;
+                bytes--;
+            }
+            remainder[j] = '\0';
+        }
+        result[i] = '\0';
+    }
+    return (result);
 }
 
-char	*ft_strchr(const char *s, int c)
+char    *other_lines(int fd, char *buff, char *result, char *remainder)
 {
-	size_t	i;
-
-	i = 0;
-	while (s[i] != '\0')
-	{
-		if ((unsigned char)s[i] == (unsigned char)c)
-			return ((char *)&s[i]);
-		i++;
-	}
-	if (c == 0)
-		return ((char *)(&s[i]));
-	return (NULL);
-}
-
-char	*ft_strdup(const char *s1)
-{
-	char	*dst;
-
-	dst = malloc(ft_strlen(s1) + 1);
-	if (dst == NULL)
-		return (NULL);
-	ft_strcpy(dst, s1);
-	return (dst);
-}
-
-char	*ft_strcpy(char *dst, const char *src)
-{
-	int	i;
-
-	i = 0;
-	while (src[i] != '\0')
-	{
-		dst[i] = src[i];
-		i++;
-	}
-	dst[i] = '\0';
-	return (dst);
-}
-
-char	*ft_strjoin(char const *s1, char const *s2)
-{
-	char	*result;
-	int		i;
-	int		j;
-
-	i = 0;
-	j = 0;
-	if (!s1 || !s2)
-		return (NULL);
-	result = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
-	if (!result)
-		return (NULL);
-	while (s1[i])
-	{
-		result[i] = s1[i];
-		i++;
-	}
-	while (s2[j])
-	{
-		result[i] = s2[j];
-		i++;
-		j++;
-	}
-	result[i] = '\0';
-	return (result);
-}
-
-size_t	ft_strlen(const char *s)
-{
-	size_t	i;
-
-	i = 0;
-	while (s[i] != '\0')
-		i++;
-	return (i);
-}
-
-char *check_remainder(char *remainder, char **result)
-{
-	char *p_n;
-
-	p_n = NULL;
-	if (remainder)
-	{
-		if ((p_n = ft_strchr(remainder, '\n')))
-		{
-			*p_n = '\0';
-			*result = ft_strdup(remainder);
-			ft_strcpy(remainder, ++p_n);
-		}
-		else
-		{
-			*result = ft_strdup(remainder);
-			ft_strclr(remainder);
-		}
-	}
-	else
-	{
-		*result = ft_strnew(1);
-	}
-	return (p_n);
-}
-
-void	ft_strclr(char *s)
-{
-	if (s)
-	{
-		while (*s)
-		{
-			*s = '\0';
-			s++;
-		}
-	}
+    ssize_t bytes;
+    char tmp[BUFFER_SIZE];
+    int i;
+    int j;
+   
+    bytes = read(fd, buff, BUFFER_SIZE);
+    if(bytes >= 0)
+    {
+        while((buff[i] != '\n' || buf [i] != '\0') && bytes > 0)
+        {
+            tmp[i] = buff[i];
+            i++;
+            bytes--;
+        }
+        if(buff[i] == '\n')
+        {
+            tmp[i] = '\n';
+            i = 0;
+            while(bytes > 0)
+            {
+                remainder[j] = tmp[i];
+                j++;
+                i++;
+                bytes--;
+            }
+            remainder[j] = '\0';      
+        }
+        tmp[i] = '\0';
+    }
+    buff = result;
+    result = (char *)malloc((ft_strlen(result)) + 2);
+    result = ft_strjoin(result, tmp);
+    free(buff);
+    return (result);
 }
