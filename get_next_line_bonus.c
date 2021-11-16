@@ -1,33 +1,39 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mchernyu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/24 12:49:09 by mchernyu          #+#    #+#             */
-/*   Updated: 2021/11/16 15:12:10 by mchernyu         ###   ########.fr       */
+/*   Updated: 2021/11/16 17:27:41 by mchernyu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
+//#include "get_next_line_utils.c"
+#include <unistd.h>
+#include <fcntl.h>
+//#define BUFFER_SIZE 1
 
 char	*get_all(int fd, char *remainder);
 char	*get_result(char *remainder);
 char	*get_remainder(char *remainder);
 
+#include <stdio.h> //
+
 char	*get_next_line(int fd)
 {
 	char		*result;
-	static char	*remainder;
+	static char	*remainder[1024];
 	
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	remainder = get_all(fd, remainder);
-	if (!remainder)
+	remainder[fd] = get_all(fd, remainder[fd]);
+	if (!(remainder[fd]))
 		return (NULL);
-	result = get_result(remainder);
-	remainder = get_remainder(remainder);
+	result = get_result(remainder[fd]);
+	remainder[fd] = get_remainder(remainder[fd]);
 	return (result);
 }
 
@@ -113,3 +119,24 @@ char	*get_remainder(char *remainder)
 	free(remainder);
 	return (tmp);
 }
+
+/*int main(void)
+{
+	int fd = open("text.txt", O_RDONLY);
+	int fd1 = open("text1.txt", O_RDONLY);
+	int i = 0;
+	int j = 0;
+	while (i < 8)
+	{
+		printf("%s", get_next_line_bonus(fd));
+		printf("%s", get_next_line_bonus(fd));
+		while(j < 8)
+		{
+			printf("%s", get_next_line_bonus(fd1));
+			j++;
+		}
+		i++;
+	}
+	close(fd);
+	close(fd1);
+}*/
