@@ -6,7 +6,7 @@
 /*   By: mchernyu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/24 12:49:09 by mchernyu          #+#    #+#             */
-/*   Updated: 2021/11/16 15:12:10 by mchernyu         ###   ########.fr       */
+/*   Updated: 2021/11/18 11:13:23 by mchernyu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,11 @@ char	*get_next_line(int fd)
 {
 	char		*result;
 	static char	*remainder;
-	
-	if (fd < 0 || BUFFER_SIZE <= 0)
+
+	if (fd == -1 || BUFFER_SIZE <= 0)
 		return (NULL);
 	remainder = get_all(fd, remainder);
-	if (!remainder)
+	if (remainder == NULL)
 		return (NULL);
 	result = get_result(remainder);
 	remainder = get_remainder(remainder);
@@ -40,7 +40,7 @@ char	*get_all(int fd, char *remainder)
 	if (buff == NULL)
 		return (NULL);
 	read_bytes = 1;
-	while (!ft_strchr(remainder, '\n') && read_bytes != 0)
+	while ((nlsearch(remainder) == NULL) && read_bytes != 0)
 	{
 		read_bytes = read(fd, buff, BUFFER_SIZE);
 		if (read_bytes == -1)
@@ -57,16 +57,16 @@ char	*get_all(int fd, char *remainder)
 
 char	*get_result(char *remainder)
 {
-	int	i;
+	int		i;
 	char	*tmp;
 
 	i = 0;
-	if (!remainder[i])
+	if (remainder[i] == '\0')
 		return (NULL);
-	while(remainder[i] != '\0' && remainder[i] != '\n')
+	while (remainder[i] != '\0' && remainder[i] != '\n')
 		i++;
 	tmp = (char *)malloc(i + 2);
-	if (!tmp)
+	if (tmp == NULL)
 		return (NULL);
 	i = 0;
 	while (remainder[i] != '\0' && remainder[i] != '\n')
@@ -85,15 +85,15 @@ char	*get_result(char *remainder)
 
 char	*get_remainder(char *remainder)
 {
-	int	i;
-	int	j;
+	int		i;
+	int		j;
 	char	*tmp;
 
 	i = 0;
 	j = 0;
-	while(remainder[i] != '\0' && remainder[i] != '\n')
+	while (remainder[i] != '\0' && remainder[i] != '\n')
 		i++;
-	if(!remainder[i])
+	if (remainder[i] == '\0')
 	{
 		free(remainder);
 		return (NULL);
@@ -102,13 +102,8 @@ char	*get_remainder(char *remainder)
 	if (tmp == NULL)
 		return (NULL);
 	i++;
-	j = 0;
-	while(remainder[i] != '\0')
-	{
-		tmp[j] = remainder[i];
-		j++;
-		i++;
-	}
+	while (remainder[i] != '\0')
+		tmp[j++] = remainder[i++];
 	tmp[j] = '\0';
 	free(remainder);
 	return (tmp);

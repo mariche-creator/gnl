@@ -6,13 +6,13 @@
 /*   By: mchernyu <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/02 14:12:17 by mchernyu          #+#    #+#             */
-/*   Updated: 2021/11/16 16:57:51 by mchernyu         ###   ########.fr       */
+/*   Updated: 2021/11/17 15:09:09 by mchernyu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
 
-size_t	ft_strlen(const char *s)
+size_t	ft_strlen(char *s)
 {
 	size_t	i;
 
@@ -20,6 +20,15 @@ size_t	ft_strlen(const char *s)
 	while (s[i] != '\0')
 		i++;
 	return (i);
+}
+
+void	ft_copy(char *s1, char *s2, int *i)
+{
+	while (s1[*i] != '\0')
+	{
+		s2[*i] = s1[*i];
+		*i += 1;
+	}
 }
 
 char	*ft_strjoin(char *s1, char *s2)
@@ -30,36 +39,26 @@ char	*ft_strjoin(char *s1, char *s2)
 
 	i = 0;
 	j = 0;
-	if(!s1)
+	if (!s1)
 	{
 		s1 = (char *)malloc(1);
 		s1[0] = '\0';
 	}
-	if (!s1 || !s2)
+	if (!s2)
 		return (NULL);
 	result = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
 	if (!result)
 		return (NULL);
 	if (s1)
-	{
-		while (s1[i] != '\0')
-		{
-			result[i] = s1[i];
-			i++;
-		}
-	}
+		ft_copy(s1, result, &i);
 	while (s2[j] != '\0')
-	{
-		result[i] = s2[j];
-		i++;
-		j++;
-	}
+		result[i++] = s2[j++];
 	result[ft_strlen(s1) + ft_strlen(s2)] = '\0';
 	free(s1);
 	return (result);
 }
 
-char	*ft_strchr(const char *s, int c)
+char	*nlsearch(char *s)
 {
 	size_t	i;
 
@@ -68,11 +67,9 @@ char	*ft_strchr(const char *s, int c)
 		return (NULL);
 	while (s[i] != '\0')
 	{
-		if ((unsigned char)s[i] == (unsigned char)c)
-			return ((char *)&s[i]);
+		if (s[i] == '\n')
+			return (&s[i]);
 		i++;
 	}
-	if (c == 0)
-		return ((char *)(&s[i]));
 	return (NULL);
 }
